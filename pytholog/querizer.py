@@ -104,7 +104,8 @@ def rule_query(kb, expr, cut, show_path):
             
             ## father which is the main rule takes unified child's domain from facts
             child_to_parent(current_goal, queue)
-            if show_path: path.append(current_goal.domain)
+            #if show_path: path.append(current_goal.domain)
+            if show_path: path.append((current_goal.fact,current_goal.domain,current_goal.parent.fact.lh))
             continue
         
         ## get the rh expr from the current goal to look for its predicate in database
@@ -112,7 +113,10 @@ def rule_query(kb, expr, cut, show_path):
         
         ## Probabilities and numeric evaluation
         if rule.predicate == "": ## if there is no predicate
-            prob_calc(current_goal, rule, queue)
+            predicates_to_check = [item for item in current_goal.fact.rhs if item.predicate]
+            terms_to_check = set([term for predicate in predicates_to_check for term in predicate.terms if not term.islower()])
+            if current_goal.domain.keys() == terms_to_check:
+                prob_calc(current_goal, rule, queue)
             continue
         
         # inequality
@@ -132,7 +136,8 @@ def rule_query(kb, expr, cut, show_path):
     
     answer = answer_handler(answer)
     
-    if show_path: 
+
+    if show_path:
         path = get_path(kb.db, expr, path)
         return answer, path
     else:

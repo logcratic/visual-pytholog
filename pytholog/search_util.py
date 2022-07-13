@@ -16,11 +16,13 @@ def parent_inherits(rl, rulef, currentgoal, Q):
         if uni: Q.push(father) ## if unify succeeds add father to queue to be searched
         
 def child_assigned(rl, rulef, currentgoal, Q):   
-    if len(currentgoal.domain) == 0 or all(i not in currentgoal.domain for i in rl.terms):
+    if len(currentgoal.domain) == 0 or (all(i not in currentgoal.domain for i in rl.terms) ):
         for f in range(len(rulef)): ## loop over corresponding facts
             ## take only the ones with the same predicate and same number of terms
             if len(rl.terms) != len(rulef[f].lh.terms): continue
-            ## a child goal from the current fact with current goal as parent    
+            ## check if all constants are contained in facts
+            if not rulef[f].rhs and not all([(item in rulef[f].lh.terms) for item in rl.terms if item.islower()]): continue
+            ## a child goal from the current fact with current goal as parent
             child = Goal(rulef[f], currentgoal)
             ### if there is nothing to unify then push to the queue directly
             Q.push(child)
@@ -53,6 +55,8 @@ def child_to_parent(child, Q): # which is the current goal
 def prob_calc(currentgoal, rl, Q):
     ## Probabilities and numeric evaluation
     key, value = prob_parser(currentgoal.domain, rl.to_string(), rl.terms)
+    ## remove digit markers 'd'
+    value = value.replace("d","").replace("_",".")
     ## eval the mathematic operation
     value = eval(value)
     if value == True: 

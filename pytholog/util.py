@@ -56,13 +56,34 @@ def term_checker(expr):
     return indx, "%s(%s)" % (expr.predicate, ",".join(terms))
     
 def get_path(db, expr, path):
-    terms = db[expr.predicate]["facts"][0].lh.terms
-    path = [{k: i[k] for k in i.keys() if k not in terms} for i in path]
-    pathe = [] 
-    for i in path:
-        for k,v in i.items():
-            pathe.append(v)
-    return set(pathe)
+    # terms = db[expr.predicate]["facts"][0].lh.terms
+    # path = [{k: i[k] for k in i.keys() if k not in terms} for i in path]
+    # pathe = []
+    # for i in path:
+    #     for k,v in i.items():
+    #         pathe.append(v)
+    # return set(pathe)
+    rules = []
+    facts = []
+    for item in path:
+        if item[1]:
+            rules.append(item)
+        else:
+            facts.append(item)
+
+    pathe = []
+    for fact in facts:
+        for rule in rules:
+            if fact[2] == rule[0].lh:
+                for rule_rh in rule[0].rhs:
+                    if fact[0].lh.predicate == rule_rh.predicate:
+                        if set(fact[0].terms) >= set([rule[1][key] for key in rule[1].keys() if key in rule_rh.terms]):
+                            pathe.append(fact)
+
+    for rule in rules:
+        rule[0].fact = rule[0].fact.split(":-")[0]
+        pathe.append(rule)
+    return pathe
 
 def pl_read(kb, file):
     file = open(file, "r")
@@ -109,6 +130,7 @@ def answer_handler(answer):
         if any(ans != "Yes" for ans in answer):
             answer = [i for i in answer if i != "Yes"]
         elif all(ans == "Yes" for ans in answer):
-            return answer_handler([])
-            
+            #return answer_handler([])
+            return ["Yes"]
+
     return answer
